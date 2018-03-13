@@ -4,6 +4,7 @@
   "description": "Simple experiments with gunjs",
   "main": "server.js",
   "scripts": {
+    "deploy": "git push heroku master",
     "start": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

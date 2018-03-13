@@ -71,8 +71,27 @@ const api = {
 }
 
 // connect
-document.addEventListener('mousemove', throttleFn(({pageX: x, pageY: y})=> api.myPUpdate({x, y})))
-subscribeArray(api.pointers, (v, k)=> !v? null: (new Date()*1-v.date > 30*1000? null || unset(api.pointers, k): ui.mod(v, k)))
+const mousemove = throttleFn(({pageX: x, pageY: y})=> api.myPUpdate({x, y}))
+document.addEventListener('mousemove', mousemove)
+subscribeArray(api.pointers, (v, k)=> {
+	if (!v) return null
+	if (new Date()*1-v.date > 30*1000) return null // unset(api.pointers, k)
+	ui.mod(v, k)
+})
+
+// touch
+const mousePos = [0,0]
+const touchmove = e=> {
+	if (!e.touches || !e.touches.length) return
+	const [touch] = e.touches
+	const {pageX, pageY} = touch
+	mousePos = [pageX, pageY]
+	mousemove({...e, pageX, pageY})
+	e.preventDefault()
+}
+document.addEventListener('touchstart', touchmove)
+document.addEventListener('touchmove', touchmove)
+document.addEventListener('touchend', e=> e.preventDefault())
 </script>
 </body>
 </html>
