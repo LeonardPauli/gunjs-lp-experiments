@@ -3,9 +3,9 @@
 const express = require('express')
 const app = express()
 
-const levelup = require('levelup')
-const encode = require('encoding-down')
-const leveldown = require('leveldown')
+// const levelup = require('levelup')
+// const encode = require('encoding-down')
+// const leveldown = require('leveldown')
 
 const Gun = require('gun')
 require('gun-level-lptmp')
@@ -23,11 +23,11 @@ const server = app.listen(config.port)
 
 // Create a new level instance which saves
 // to the `data/` folder.
-const levelDB = levelup(
-	encode(leveldown('data/level'), {
-		valueEncoding: 'json',
-	})
-)
+// const levelDB = levelup(
+// 	encode(leveldown('data/level'), {
+// 		valueEncoding: 'json',
+// 	})
+// )
 
 // setup server
 // const http = require('http')
@@ -35,9 +35,9 @@ const levelDB = levelup(
 
 // setup gun
 const gun = new Gun({
-	level: levelDB,
+	// level: levelDB,
 	// file: 'data/pure.json',
 	localStorage: false,
-	radisk: false,
+	radisk: true,
 	web: server,
 })
