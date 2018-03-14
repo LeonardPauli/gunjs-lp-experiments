@@ -25,47 +25,56 @@ const gun2 = new Gun(`http://localhost:${port}/gun`)
 
 // Only a node can be linked! Not "undefined"! bug
 describe('sets', ()=> {
-	const expectSetToWork = (xs, x)=> 
-		p(r=> xs.set(x, a=> (expect(a.err).toBeFalsy(), r())))
+	const g = gun
+	
+	const xAlts = [
+		va=> g                              .put(va),
+		va=> g.get(k())                     .put(va),
+		va=> g.get(k()) .put(v()) .get(k()) .put(va),
 
-	it('simplest', async ()=> {
-		const xs = gun.get(k())
-		const x = gun.put(v())
-		await expectSetToWork(xs, x)
-	})
-	it('1 level x', async ()=> {
-		const xs = gun.get(k())
-		const x = gun.get(k()).put(v())
-		await expectSetToWork(xs, x)
-	})
-	it('1 level x, xs put', async ()=> {
-		const xs = gun.put(v())
-		const x = gun.get(k()).put(v())
-		await expectSetToWork(xs, x)
-	})
-	it('2 level x', async ()=> { // failing
-		const xs = gun.get(k())
-		const x = gun.get(k()).get(k()).put(v())
-		await expectSetToWork(xs, x)
-	})
-	it('2 level x, xs put', async ()=> { // failing
-		const xs = gun.put(v())
-		const x = gun.get(k()).get(k()).put(v())
-		await expectSetToWork(xs, x)
-	})
-	it('2 level x, with intermediate put', async ()=> {
-		const xs = gun.get(k())
-		const x = gun.get(k()).put(v()).get(k()).put(v())
-		await expectSetToWork(xs, x)
-	})
-	it('2 level x, with empty intermediate put', async ()=> { // failing
-		const xs = gun.get(k())
-		const x = gun.get(k()).put({}).get(k()).put(v())
-		await expectSetToWork(xs, x)
-	})
-	it('2 level xs', async ()=> {
-		const xs = gun.get(k()).get(k())
-		const x = gun.put(v())
-		await expectSetToWork(xs, x)
-	})
+		// va=> g.get(k())           .get(k()) .put(va),
+		// va=> g.get(k()) .put({ }) .get(k()) .put(va),
+	]
+
+	const xsAlts = [
+		()=> g                    .put(v()),
+		()=> g.get(k()),
+		()=> g.get(k()) .get(k()),
+	]
+
+	xAlts.forEach(_x=> it('x =   ' + _x.toString(), async ()=> {
+		const xs = xsAlts[0](), val = v(), x = _x(val)
+		await p(r=> xs.set(x, a=> (expect(a.err).toBeFalsy(), r())))
+
+		xs.val((v, k)=> expect(v[x._.soul || x._.put._['#']]).not.toBeFalsy())
+		await delay()
+	}))
+	xsAlts.forEach(_xs=> it('xs = ' + _xs.toString(), async ()=> {
+		const val = v(), x = xAlts[0](val), xs = _xs()
+		await p(r=> xs.set(x, a=> (expect(a.err).toBeFalsy(), r())))
+		
+		xs.val((v, k)=> expect(Object.keys(v).indexOf(x._.soul)).toBeGreaterThanOrEqual(0))
+		await delay()
+	}))
+
+	/*
+	// you can't add items with not-yet-existing deep paths, but you can .set on not-yet-existing deep paths
+	// .put({}) doesn't help
+
+	// xs.set(x)
+	// with xs = g.get(k()) "and x as ok or er"
+	ok = g                              .put(v())
+	ok = g.get(k())                     .put(v())
+	ok = g.get(k()) .put(v()) .get(k()) .put(v())
+
+	er = g.get(k())           .get(k()) .put(v()) // error
+	er = g.get(k()) .put({ }) .get(k()) .put(v()) // error
+
+	// with x = g.put(v()) and xs as ok or er
+	ok = g                    .put(v())
+	ok = g.get(k())
+	ok = g.get(k()) .get(k())
+	a) Is there any reason why non-existing-deep-path+put won't work properly with xs.set(it)?
+	b) is there any reason to why .put({}) won't help / create an empty object?
+	*/
 })
